@@ -1,42 +1,67 @@
-import React, { useState } from 'react';
-import { AiOutlineMinus, AiOutlinePlus, AiFillStar, AiOutlineStar } from 'react-icons/ai';
+import { useState, useEffect } from 'react'
+import {
+  AiOutlineMinus,
+  AiOutlinePlus,
+  AiFillStar,
+  AiOutlineStar,
+} from 'react-icons/ai'
+import { Product } from '@/components'
 
-import { client, urlFor } from '../../lib/client';
-import { Product } from '../../components';
-import { useStateContext } from '../../context/StateContext';
+import { useStateContext } from '@/context/StateContext'
 
-const ProductDetails = ({ product, products }) => {
-  const { image, name, details, price } = product;
-  const [index, setIndex] = useState(0);
-    
-  const  {qty, decQty, incQty, onAdd, setShowCart} = useStateContext()
-  
+// Import the Sanity client
+import { client, urlFor } from '@/lib/client'
+
+// -< ProductDetail >- component
+export default function ProductDetail({ product, products }) {
+  // Get the state from the context
+  const { qty, decQty, incQty, onAdd, setShowCart } = useStateContext()
+
+  // Destructure the product object
+  const { image, name, details, price } = product
+  // State to keep track of which image is selected
+  const [index, setIndex] = useState(0)
+
   const handleBuyNow = () => {
     onAdd(product, qty)
+
     setShowCart(true)
   }
+
   return (
     <div>
-      <div className="product-detail-container">
+      <div className='product-detail-container'>
         <div>
-          <div className="image-container">
-            <img src={urlFor(image && image[index])} className="product-detail-image" />
+          {/* Product - main image (also the image that a user has selected) */}
+          <div className='image-container'>
+            <img
+              src={urlFor(image && image[index])}
+              alt={`${name}`}
+              className='product-detail-image'
+            />
           </div>
-          <div className="small-images-container">
+
+          {/* Product - all images that a user can select to view */}
+          <div className='small-images-container'>
             {image?.map((item, i) => (
-              <img 
+              <img
                 key={i}
                 src={urlFor(item)}
-                className={i === index ? 'small-image selected-image' : 'small-image'}
+                className={
+                  i === index ? 'small-image selected-image' : 'small-image'
+                }
+                // select image on mouse enter (hover state on desktop, click on mobile)
                 onMouseEnter={() => setIndex(i)}
+                alt={`${i} ${name}`}
               />
             ))}
           </div>
         </div>
 
-        <div className="product-detail-desc">
+        {/* Product - details */}
+        <div className='product-detail-desc'>
           <h1>{name}</h1>
-          <div className="reviews">
+          <div className='reviews'>
             <div>
               <AiFillStar />
               <AiFillStar />
@@ -44,42 +69,59 @@ const ProductDetails = ({ product, products }) => {
               <AiFillStar />
               <AiOutlineStar />
             </div>
-            <p>
-              (20)
-            </p>
+            <p>(20)</p>
           </div>
           <h4>Details: </h4>
           <p>{details}</p>
-          <p className="price">${price}</p>
-          <div className="quantity">
+          <p className='price'>${price}</p>
+          <div className='quantity'>
             <h3>Quantity:</h3>
-            <p className="quantity-desc">
-              <span className="minus" onClick={decQty}><AiOutlineMinus /></span>
-              <span className="num">{qty}</span>
-              <span className="plus" onClick={incQty}><AiOutlinePlus /></span>
+            <p className='quantity-desc'>
+              <span className='minus' onClick={decQty}>
+                <AiOutlineMinus />
+              </span>
+              <span className='num'>{qty}</span>
+              <span className='plus' onClick={incQty}>
+                <AiOutlinePlus />
+              </span>
             </p>
           </div>
-          <div className="buttons">
-            <button type="button" className="add-to-cart" onClick={()=>onAdd(product, qty)}>Add to Cart</button>
-            <button type="button" className="buy-now" onClick={handleBuyNow}>Buy Now</button>
+          <div className='buttons'>
+            <button
+              type='button'
+              className='add-to-cart'
+              onClick={() => {
+                onAdd(product, qty)
+              }}
+            >
+              Add to Cart
+            </button>
+            <button type='button' className='buy-now' onClick={handleBuyNow}>
+              Buy Now
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="maylike-products-wrapper">
-          <h2>You may also like</h2>
-          <div className="marquee">
-            <div className="maylike-products-container track">
-              {products.map((item) => (
-                <Product key={item._id} product={item} />
-              ))}
-            </div>
+      {/* "You may also like" section - marquee of images */}
+      <div className='maylike-products-wrapper'>
+        <h2>You may also like</h2>
+
+        {/* TODO: Add a marquee react library for infinite scrolling */}
+        <div className='marquee'>
+          <div className='maylike-products-container track'>
+            {products.map((item) => (
+              <Product key={item._id} product={item} />
+            ))}
           </div>
+        </div>
       </div>
     </div>
   )
 }
 
+// -< getStaticPaths >- and -< getStaticProps >- methods
+// Fetch all products from sanity to generate paths (needed for SSG below)
 export const getStaticPaths = async () => {
   const query = `*[_type == "product"] {
     slug {
@@ -116,4 +158,3 @@ export const getStaticProps = async ({ params: { slug }}) => {
   }
 }
 
-export default ProductDetails
